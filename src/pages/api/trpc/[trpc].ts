@@ -1,19 +1,19 @@
-import { createNextApiHandler } from "@trpc/server/adapters/next";
+import { createNextApiHandler } from "@trpc/server/adapters/next"
 
-import { env } from "n/env.mjs";
-import { createTRPCContext } from "n/server/api/trpc";
-import { appRouter } from "n/server/api/root";
+import { env } from "n/env.mjs"
+import { createContext } from "n/server/trpc/context"
+import { appRouter } from "n/server/trpc/routers/_app"
 
 // export API handler
 export default createNextApiHandler({
   router: appRouter,
-  createContext: createTRPCContext,
+  createContext,
   onError:
     env.NODE_ENV === "development"
       ? ({ path, error }) => {
           console.error(
-            `❌ tRPC failed on ${path ?? "<no-path>"}: ${error.message}`,
-          );
+            `❌ tRPC failed on ${path ?? "<no-path>"}: ${error.message}`
+          )
         }
       : undefined,
-});
+})
