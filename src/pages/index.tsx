@@ -1,8 +1,27 @@
+"use client"
 import { type NextPage } from "next"
 import Head from "next/head"
-import Calender from "../components/Calendar"
+import { useEffect, useState } from "react"
+import Calender from "n/components/Calendar"
+import { type DateTime } from "@types"
+import Spinner from "n/components/Spinner"
+import Menu from "n/components/Menu"
+import { trpc } from "src/utils/trpc"
 
 const Home: NextPage = () => {
+  const [date, setDate] = useState<DateTime>({
+    justDate: null,
+    dateTime: null,
+  })
+
+  useEffect(() => {
+    if (date.dateTime) checkMenuStatus()
+  }, [date])
+
+  // tRPC
+  const { mutate: checkMenuStatus, isSuccess } =
+    trpc.menu.checkMenuStatus.useMutation()
+
   return (
     <>
       <Head>
@@ -11,7 +30,14 @@ const Home: NextPage = () => {
         <link rel="icon" href="/favicon.ico" />
       </Head>
       <main>
-        <Calender />
+        {!date.dateTime && <Calender setDate={setDate} date={date} />}
+        {date.dateTime && isSuccess ? (
+          <Menu />
+        ) : (
+          <div className="flex h-screen items-center justify-center">
+            <Spinner />
+          </div>
+        )}
       </main>
     </>
   )

@@ -18,7 +18,9 @@
     "noUncheckedIndexedAccess": true,
     "baseUrl": ".",
     "paths": {
-      "n/*": ["./src/*"]
+      "n/*": ["./src/*"],
+      "@types": ["src/utils/types"],
+      "@lib/*": ["src/lib/*"]
     }
   },
   "include": [
