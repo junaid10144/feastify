@@ -1,14 +1,25 @@
 import { trpc } from "n/utils/trpc"
 import { type FC, useState } from "react"
 import Select from "react-select"
-import { capitalize, selectOptions } from "n/utils/helpers"
+import { capitalize, selectOptions } from "n/utils/helper"
 import Image from "next/image"
+import { Button } from "@chakra-ui/react"
+import { format, parseISO } from "date-fns"
+import { useRouter } from "next/router"
+import { HiArrowLeft } from "react-icons/hi"
 
-interface MenuProps {}
+interface MenuProps {
+  selectedTime: string // as ISO string
+  addToCart: (id: string, quantity: number) => void
+}
 
-const Menu: FC<MenuProps> = ({}) => {
-  const { data: menuItems } = trpc.menu.getMenuItems.useQuery()
-  const [filter, setFilter] = useState<undefined | string>("")
+const Menu: FC<MenuProps> = ({ selectedTime, addToCart }) => {
+  const router = useRouter()
+  const { data: menuItems } = trpc.menu.getMenuItems.useQuery(undefined, {
+    refetchOnMount: false,
+  })
+
+  const [filter, setFilter] = useState<string | undefined>(undefined)
 
   const filteredMenuItems = menuItems?.filter((menuItem) => {
     if (!filter) return true
@@ -19,6 +30,13 @@ const Menu: FC<MenuProps> = ({}) => {
     <div className="bg-white">
       <div className="mx-auto max-w-2xl px-4 py-16 sm:py-24 lg:max-w-full">
         <div className="flex w-full justify-between">
+          <h2 className="flex items-center gap-4 text-2xl font-bold tracking-tight text-gray-900">
+            <HiArrowLeft
+              className="cursor-pointer"
+              onClick={() => router.push("/")}
+            />
+            On our menu for {format(parseISO(selectedTime), "MMM do, yyyy")}
+          </h2>
           <Select
             onChange={(e) => {
               if (e?.value === "all") setFilter(undefined)
@@ -56,6 +74,15 @@ const Menu: FC<MenuProps> = ({}) => {
                   ${menuItem.price.toFixed(2)}
                 </p>
               </div>
+
+              <Button
+                className="mt-4"
+                onClick={() => {
+                  addToCart(menuItem.id, 1)
+                }}
+              >
+                Add to cart
+              </Button>
             </div>
           ))}
         </div>

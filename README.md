@@ -26,3 +26,12 @@ You can check out the [create-t3-app GitHub repository](https://github.com/t3-os
 ## How do I deploy this?
 
 Follow our deployment guides for [Vercel](https://create.t3.gg/en/deployment/vercel), [Netlify](https://create.t3.gg/en/deployment/netlify) and [Docker](https://create.t3.gg/en/deployment/docker) for more information.
+
+## Potential improvements
+
+- [ ] Add a way for an admin to delete a booking on customer request
+- [ ] Add a way for an admin to edit a booking on customer request
+- [ ] Implement a proper backend check regarding booking time validity (currently mocked)
+- [ ] CSS / UI improvements
+- [ ] Option to book for "immidiately" (current time)
+- [ ] Prevent Admin from opening later than they are closing (currently possible)

@@ -1,15 +1,17 @@
-import { NextRequest, NextResponse } from "next/server"
+// middleware.ts
+import type { NextRequest } from "next/server"
+import { NextResponse } from "next/server"
 import { verifyAuth } from "./lib/auth"
 
+// This function can be marked `async` if using `await` inside
 export async function middleware(req: NextRequest) {
-  // get token from user
   const token = req.cookies.get("user-token")?.value
 
-  // validate if the user is authenticated
+  // validate the user is authenticated
   const verifiedToken =
     token &&
     (await verifyAuth(token).catch((err) => {
-      console.log(err)
+      console.error(err.message)
     }))
 
   if (req.nextUrl.pathname.startsWith("/login") && !verifiedToken) {
@@ -25,8 +27,10 @@ export async function middleware(req: NextRequest) {
   if (!verifiedToken) {
     return NextResponse.redirect(new URL("/login", req.url))
   }
+  return
 }
 
+// See "Matching Paths" below to learn more
 export const config = {
-  matcher: ["/dashboard/:path*", "/login"],
+  matcher: ["/dashboard/:path*", "/api/admin/:path*", "/login"],
 }

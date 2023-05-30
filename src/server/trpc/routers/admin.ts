@@ -1,33 +1,30 @@
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-import { SignJWT } from "jose"
-import { adminProcedure, publicProcedure, router } from "../trpc"
-import { any, z } from "zod"
-import { nanoid } from "nanoid"
-import cookie from "cookie"
-import { getJWTSecretKey } from "../../../lib/auth"
-import { TRPCError } from "@trpc/server"
 import { s3 } from "@lib/s3"
+import { TRPCError } from "@trpc/server"
+import cookie from "cookie"
+import { SignJWT } from "jose"
+import { nanoid } from "nanoid"
 import { MAX_FILE_SIZE } from "n/constants/config"
+import { z } from "zod"
+import { getJwtSecretKey } from "n/lib/auth"
+import { adminProcedure, publicProcedure, router } from "../trpc"
 
 export const adminRouter = router({
   login: publicProcedure
-    .input(z.object({ email: z.string().email(), password: z.string() }))
-    .mutation(async ({ ctx, input }) => {
+    .input(z.object({ email: z.string() /* .email() */, password: z.string() }))
+    .mutation(async ({ input, ctx }) => {
       const { res } = ctx
       const { email, password } = input
-
       if (
         email === process.env.ADMIN_EMAIL &&
         password === process.env.ADMIN_PASSWORD
       ) {
-        // user is authenticated as admin
-
+        // user is authenticated
         const token = await new SignJWT({})
           .setProtectedHeader({ alg: "HS256" })
           .setJti(nanoid())
           .setIssuedAt()
           .setExpirationTime("1h")
-          .sign(new TextEncoder().encode(getJWTSecretKey()))
+          .sign(new TextEncoder().encode(getJwtSecretKey()))
 
         res.setHeader(
           "Set-Cookie",
@@ -37,7 +34,6 @@ export const adminRouter = router({
             secure: process.env.NODE_ENV === "production",
           })
         )
-
         return { success: true }
       }
 
@@ -57,7 +53,7 @@ export const adminRouter = router({
       const { url, fields } = (await new Promise((resolve, reject) => {
         s3.createPresignedPost(
           {
-            Bucket: "junaid-booking-app",
+            Bucket: "youtube-booking-software",
             Fields: { key },
             Expires: 60,
             Conditions: [
@@ -65,9 +61,9 @@ export const adminRouter = router({
               ["starts-with", "$Content-Type", "image/"],
             ],
           },
-          (err, data) => {
+          (err, signed) => {
             if (err) return reject(err)
-            resolve(data)
+            resolve(signed)
           }
         )
       })) as any as { url: string; fields: any }
@@ -78,9 +74,9 @@ export const adminRouter = router({
   addMenuItem: adminProcedure
     .input(
       z.object({
+        imageKey: z.string(),
         name: z.string(),
         price: z.number(),
-        imageKey: z.string(),
         categories: z.array(
           z.union([
             z.literal("breakfast"),
@@ -110,12 +106,12 @@ export const adminRouter = router({
       // Delete image from s3
       const { imageKey, id } = input
       await s3
-        .deleteObject({ Bucket: "junaid-booking-app", Key: imageKey })
+        .deleteObject({ Bucket: "youtube-booking-software", Key: imageKey })
         .promise()
 
       // Delete image from db
-      const menuItem = await ctx.prisma.menuItem.delete({ where: { id } })
+      await ctx.prisma.menuItem.delete({ where: { id } })
 
-      return menuItem
+      return true
     }),
 })
